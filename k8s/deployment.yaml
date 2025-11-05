@@ -1,0 +1,81 @@
+# Deployment Kubernetes pour l'API Toxic Detection
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toxic-detection-api
+  labels:
+    app: toxic-detection-api
+    version: v1
+spec:
+  replicas: 3 # 3 instances pour la haute disponibilité
+  selector:
+    matchLabels:
+      app: toxic-detection-api
+  template:
+    metadata:
+      labels:
+        app: toxic-detection-api
+        version: v1
+    spec:
+      containers:
+        - name: api
+          image: gcr.io/PROJECT_ID/toxic-detection-api:latest # Remplacer PROJECT_ID
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: MODEL_PATH
+              value: "/app/model/svm_model.pkl"
+            - name: FLASK_ENV
+              value: "production"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+      restartPolicy: Always
+---
+# Service pour exposer l'API
+apiVersion: v1
+kind: Service
+metadata:
+  name: toxic-detection-service
+  labels:
+    app: toxic-detection-api
+spec:
+  selector:
+    app: toxic-detection-api
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  type: LoadBalancer

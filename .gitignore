@@ -1,0 +1,27 @@
+# Environment files
+*.env
+.env
+
+# Data files (too large for GitHub)
+data/
+
+# Model files (too large for GitHub)
+model/bert_model/
+*.safetensors
+*.pt
+model/*.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
